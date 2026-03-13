@@ -2,62 +2,35 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Mock-KI Interview mit Mikrofon</title>
+<title>Mock-KI Interview mit Zeitlimit</title>
 </head>
 <body>
 
 <h2>Mock-KI Bewerbungsgespräch (Deutsch)</h2>
 <button id="startBtn">Interview starten</button>
 <p id="question"></p>
-<button id="nextBtn" style="display:none;">Antwort fertig → nächste Frage</button>
 
 <script>
+// Vorprogrammierte Fragen + Zeit pro Frage (ms)
 const interviewQuestions = [
-  "Hallo! Willkommen zum kurzen Bewerbungsgespräch. Wie ist ihr Name ?",
-  "Stellen Sie sich in einem Satz kurz vor.",
-  "Warum sollten wir Sie einstellen?",
+  "Guten Tag, wie heißen Sie denn?",
+  "Schön Sie kennenzulernen. Stellen Sie sich bitte in einem Satz einmalkurz vor.",
+  "Warum sollten wir sie einstellen? ",
   "Vielen Dank, das Interview ist beendet."
 ];
-const answerTimes = [120, 300, 500, 500]; // ms pro Frage
-  
-let currentQuestion = 0;
+
+const answerTimes = [5000, 5000, 5000, 5000, 3000]; // Zeit pro Frage in ms
+
+let current = 0;
 let recognition;
 let interviewTimeout;
 
-// TTS
+// Text-to-Speech Funktion
 function speak(text){
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "de-DE";
   speechSynthesis.speak(utter);
 }
-
-// Starte Interview
-document.getElementById("startBtn").addEventListener("click", () => {
-  document.getElementById("startBtn").style.display = "none";
-  document.getElementById("nextBtn").style.display = "inline";
-
-  // Init Mikrofon
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "de-DE";
-
- recognition.onresult = (event) => {
-  const answer = event.results[0][0].transcript;
-  console.log("Antwort:", answer);
-
-  
-
-  recognition.onerror = (err) => console.log("Mikrofonfehler:", err);
-
-  nextQuestion();
-
-  // 5-Minuten Timer
-  interviewTimeout = setTimeout(() => {
-    recognition.stop();
-    document.getElementById("question").innerText = "Interview beendet. Vielen Dank!";
-    speak("Interview beendet. Vielen Dank!");
-    document.getElementById("nextBtn").style.display = "none";
-  }, 300000);
-});
 
 // Nächste Frage
 function nextQuestion(){
@@ -69,18 +42,44 @@ function nextQuestion(){
     // Mikrofon starten
     recognition.start();
 
-    // Antwortzeit abwarten, aber keine Meldung anzeigen
+    // Antwortzeit abwarten, Mikrofon stoppen, zur nächsten Frage
     setTimeout(() => {
-      recognition.stop(); // Mikrofon stoppen
+      recognition.stop(); 
       current++;
     }, answerTimes[current]);
 
   } else {
-    document.getElementById("question").innerText = "Interview beendet. Vielen Dank!";
-    speak("Interview beendet. Vielen Dank!");
+    document.getElementById("question").innerText = "Das Interview beendet. Vielen Dank!";
+    speak("Das Interview beendet. Vielen Dank!");
   }
 }
-  
+
+// Start Button
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert("Bitte Chrome oder Edge benutzen!");
+    return;
+  }
+
+  recognition = new webkitSpeechRecognition();
+  recognition.lang = "de-DE";
+
+  recognition.onresult = (event) => {
+    const answer = event.results[0][0].transcript;
+    console.log("Antwort:", answer); // hier könntest du sie speichern
+  };
+
+  recognition.onerror = (err) => console.log("Mikrofonfehler:", err);
+
+  current = 0;
+  nextQuestion();
+
+  // 5-Minuten Gesamt-Timeout
+  interviewTimeout = setTimeout(() => {
+    recognition.stop();
+    document.getElementById("question").innerText = "Interview beendet. Vielen Dank!";
+  }, 300000); // 300.000 ms = 5 Minuten
+});
 </script>
 
 </body>
