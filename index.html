@@ -38,10 +38,9 @@ function nextQuestion(){
   if(current < interviewQuestions.length){
     const q = interviewQuestions[current];
     document.getElementById("question").innerText = q;
-    speak(q);
-
-    // Mikrofon starten
-    recognition.start();
+   speak(q, () => {
+  recognition.start();
+});
 
     // Timeout, falls Nutzer nicht klickt
     questionTimeout = setTimeout(() => {
